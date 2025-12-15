@@ -54,7 +54,6 @@ const CMDB = () => {
         const response = await api.getAssets();
         console.log("[CMDB] Assets received:", response);
         
-        // Extract data array from response.data
         const dataArray = response?.data || response || [];
         const formattedAssets = (Array.isArray(dataArray) ? dataArray : []).map((item: any) => ({
           id: item.id || "",
@@ -82,11 +81,12 @@ const CMDB = () => {
   }, []);
 
   const filteredData = assets.filter((item) => {
-    const matchesSearch = item.id.toLowerCase().includes(searchQuery.toLowerCase()) || 
-                         item.name.toLowerCase().includes(searchQuery.toLowerCase()) ||
-                         item.serialNumber.toLowerCase().includes(searchQuery.toLowerCase());
-    const matchesStatus = statusFilter === "all" || 
-                         item.status.toLowerCase() === statusFilter.toLowerCase();
+    const matchesSearch =
+      item.kode_bmd.toLowerCase().includes(searchQuery.toLowerCase()) || 
+      item.name.toLowerCase().includes(searchQuery.toLowerCase()) ||
+      item.serialNumber.toLowerCase().includes(searchQuery.toLowerCase());
+    const matchesStatus =
+      statusFilter === "all" || item.status.toLowerCase() === statusFilter.toLowerCase();
     return matchesSearch && matchesStatus;
   });
 
@@ -98,10 +98,17 @@ const CMDB = () => {
         <div className="flex flex-wrap items-center gap-4">
           <div className="relative flex-1 min-w-[250px]">
             <Search className="absolute left-3 top-1/2 -translate-y-1/2 h-4 w-4 text-muted-foreground" />
-            <Input placeholder="Search asset..." value={searchQuery} onChange={(e) => setSearchQuery(e.target.value)} className="pl-10" />
+            <Input
+              placeholder="Search asset..."
+              value={searchQuery}
+              onChange={(e) => setSearchQuery(e.target.value)}
+              className="pl-10"
+            />
           </div>
           <Select value={statusFilter} onValueChange={setStatusFilter}>
-            <SelectTrigger className="w-[150px]"><SelectValue placeholder="All Status" /></SelectTrigger>
+            <SelectTrigger className="w-[150px]">
+              <SelectValue placeholder="All Status" />
+            </SelectTrigger>
             <SelectContent>
               <SelectItem value="all">All Status</SelectItem>
               <SelectItem value="aktif">Aktif</SelectItem>
@@ -117,13 +124,13 @@ const CMDB = () => {
         <Table>
           <TableHeader>
             <TableRow>
-              <TableHead>BMD ID</TableHead>
-              <TableHead>Serial Number</TableHead>
-              <TableHead>Category</TableHead>
-              <TableHead>Sub Category</TableHead>
-              <TableHead>Condition</TableHead>
+              <TableHead>BMD ID & No. Seri</TableHead>
+              <TableHead>Nama Aset</TableHead>
+              <TableHead>Kategori</TableHead>
+              <TableHead>Sub Kategori</TableHead>
+              <TableHead>Kondisi</TableHead>
               <TableHead>Status</TableHead>
-              <TableHead>Location</TableHead>
+              <TableHead>Lokasi</TableHead>
               <TableHead>Action</TableHead>
             </TableRow>
           </TableHeader>
@@ -144,11 +151,12 @@ const CMDB = () => {
               filteredData.map((item) => (
                 <TableRow key={item.id}>
                   <TableCell>
-                    <span className="font-semibold text-blue-700">{item.kode_bmd || "-"}</span>
+                    <div className="flex flex-col">
+                      <span className="font-semibold text-blue-700">{item.kode_bmd || "-"}</span>
+                      <span className="text-gray-500 text-sm">{item.serialNumber || "-"}</span>
+                    </div>
                   </TableCell>
-                  <TableCell>
-                    <span className="text-gray-700">{item.serialNumber || "-"}</span>
-                  </TableCell>
+                  <TableCell>{item.name}</TableCell>
                   <TableCell>{item.category}</TableCell>
                   <TableCell>{item.subCategory}</TableCell>
                   <TableCell>

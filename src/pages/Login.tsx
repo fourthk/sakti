@@ -124,15 +124,6 @@ const Login = () => {
         style={{ backgroundColor: "#FFFFFF" }}
       >
 
-        <h1
-  className="text-2xl font-semibold text-center mb-8 italic"
-  style={{ color: "#384E66" }}
->
-  Change & Configuration
-  <br />
-  Management
-</h1>
-
 <div className="text-center mb-6">
   <img
     src="/src/assets/logo-sakti.png"

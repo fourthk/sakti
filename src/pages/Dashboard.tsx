@@ -40,19 +40,21 @@ const Dashboard = () => {
           api.getDashboardSummary(),
           api.getDashboardWeeklyTrend(),
         ]);
-        
+
         console.log("[Dashboard] Summary data received:", summaryResponse);
         console.log("[Dashboard] Weekly trend data received:", trendResponse);
-        
-        // Extract data from response.data
+
+        // Extract summary
         const summaryData = summaryResponse?.data || summaryResponse;
-        const trendData = trendResponse?.data || trendResponse;
-        
+
+        // Extract trend from nested data
+        const trendData = trendResponse?.data?.trend || [];
+
         console.log("[Dashboard] Extracted summary:", summaryData);
         console.log("[Dashboard] Extracted trend:", trendData);
-        
+
         setSummary(summaryData);
-        setWeeklyData(Array.isArray(trendData) ? trendData : []);
+        setWeeklyData(trendData);
       } catch (error) {
         console.error("[Dashboard] Failed to fetch dashboard data:", error);
       } finally {
@@ -97,9 +99,7 @@ const Dashboard = () => {
             <CardContent className="p-5">
               <div className="flex items-start justify-between">
                 <div className="space-y-2">
-                  <p className="text-sm font-medium text-muted-foreground">
-                    {stat.title}
-                  </p>
+                  <p className="text-sm font-medium text-muted-foreground">{stat.title}</p>
                   <p className="text-3xl font-bold text-foreground">
                     {loading ? "..." : stat.value}
                   </p>
@@ -117,9 +117,7 @@ const Dashboard = () => {
       <Card>
         <CardHeader>
           <CardTitle>Weekly Trend</CardTitle>
-          <CardDescription>
-            Reports Submitted / Inspected / Implemented
-          </CardDescription>
+          <CardDescription>Reports Submitted / Inspected / Implemented</CardDescription>
         </CardHeader>
         <CardContent>
           <div className="h-[300px] w-full">
@@ -145,24 +143,9 @@ const Dashboard = () => {
                   }}
                 />
                 <Legend wrapperStyle={{ paddingTop: "20px" }} />
-                <Bar
-                  dataKey="submitted"
-                  name="Submitted"
-                  fill="hsl(210 26% 31%)"
-                  radius={[2, 2, 0, 0]}
-                />
-                <Bar
-                  dataKey="inspected"
-                  name="Inspected"
-                  fill="hsl(210 26% 50%)"
-                  radius={[2, 2, 0, 0]}
-                />
-                <Bar
-                  dataKey="implemented"
-                  name="Implemented"
-                  fill="hsl(210 26% 70%)"
-                  radius={[2, 2, 0, 0]}
-                />
+                <Bar dataKey="submitted" name="Submitted" fill="hsl(210 26% 31%)" radius={[2, 2, 0, 0]} />
+                <Bar dataKey="inspected" name="Inspected" fill="hsl(210 26% 50%)" radius={[2, 2, 0, 0]} />
+                <Bar dataKey="implemented" name="Implemented" fill="hsl(210 26% 70%)" radius={[2, 2, 0, 0]} />
               </BarChart>
             </ResponsiveContainer>
           </div>
