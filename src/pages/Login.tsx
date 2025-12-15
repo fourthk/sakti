@@ -126,7 +126,7 @@ const Login = () => {
 
 <div className="text-center mb-6">
   <img
-    src="/src/assets/logo-sakti.png"
+    src="/assets/logo-sakti.png"
     alt="SAKTI Logo"
     className="h-20 mx-auto drop-shadow-lg"
   />
