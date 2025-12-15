@@ -1,231 +1,182 @@
-import { useState } from "react";
+import { useState, useEffect } from "react";
 import { useNavigate } from "react-router-dom";
-import {
-  Server,
-  Network,
-  Laptop,
-  Truck,
-  FileCode,
-  Globe,
-  Lock,
-  Wrench,
-  FileText,
-  Users,
-  Cloud,
-  Building,
-  Search,
-  Filter,
-  MoreVertical,
-} from "lucide-react";
+import { Search, MoreHorizontal } from "lucide-react";
 import { Input } from "@/components/ui/input";
 import { Button } from "@/components/ui/button";
+import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
+import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from "@/components/ui/table";
+import { DropdownMenu, DropdownMenuContent, DropdownMenuItem, DropdownMenuTrigger } from "@/components/ui/dropdown-menu";
 import { Badge } from "@/components/ui/badge";
-import {
-  Table,
-  TableBody,
-  TableCell,
-  TableHead,
-  TableHeader,
-  TableRow,
-} from "@/components/ui/table";
-import {
-  DropdownMenu,
-  DropdownMenuContent,
-  DropdownMenuItem,
-  DropdownMenuTrigger,
-} from "@/components/ui/dropdown-menu";
-import {
-  Pagination,
-  PaginationContent,
-  PaginationItem,
-  PaginationLink,
-  PaginationNext,
-  PaginationPrevious,
-} from "@/components/ui/pagination";
-import {
-  Dialog,
-  DialogContent,
-  DialogHeader,
-  DialogTitle,
-} from "@/components/ui/dialog";
-import {
-  Select,
-  SelectContent,
-  SelectItem,
-  SelectTrigger,
-  SelectValue,
-} from "@/components/ui/select";
+import { Card } from "@/components/ui/card";
+import { api } from "@/lib/api";
 
-interface CategoryCardProps {
-  icon: React.ElementType;
-  count: number;
-  label: string;
-  iconColor: string;
-  onClick: () => void;
+interface CMDBItem {
+  id: string;
+  kode_bmd: string;
+  name: string;
+  category: string;
+  subCategory: string;
+  serialNumber: string;
+  condition: string;
+  status: string;
+  dinas: string;
+  location: string;
 }
 
-const CategoryCard = ({ icon: Icon, count, label, iconColor, onClick }: CategoryCardProps) => {
-  return (
-    <button
-      onClick={onClick}
-      className="rounded-lg p-6 flex items-center gap-4 shadow-sm transition-all hover:shadow-md hover:scale-105 w-full text-left"
-      style={{
-        backgroundColor: "#FDFDFD",
-        border: "1px solid #384E66",
-      }}
-    >
-      <div
-        className="p-3 rounded-lg"
-        style={{ backgroundColor: iconColor + "20" }}
-      >
-        <Icon size={32} style={{ color: iconColor }} />
-      </div>
-      <div>
-        <div className="text-4xl font-bold" style={{ color: "#384E66" }}>
-          {count}
-        </div>
-        <div className="text-sm text-gray-600">{label}</div>
-      </div>
-    </button>
-  );
+const getStatusBadgeVariant = (status: string) => {
+  const statusLower = status?.toLowerCase() || "";
+  if (statusLower === "active" || statusLower === "aktif") return "success";
+  if (statusLower === "inactive" || statusLower === "tidak aktif") return "secondary";
+  if (statusLower === "maintenance") return "warning";
+  if (statusLower === "retired") return "destructive";
+  return "secondary";
 };
 
-const mockAssets = [
-  {
-    id: 1,
-    category: "Infrastructure",
-    parentId: "PAR001",
-    assetId: "AST001",
-    assetType: "Server",
-    hostname: "srv-prod-01",
-    ipAddress: "192.168.1.10",
-    osName: "Ubuntu",
-    osVersion: "22.04 LTS",
-    vendor: "Dell",
-    location: "Data Center A",
-    ownerDepartment: "IT Operations",
-    responsiblePerson: "John Doe",
-    status: "Active",
-    description: "Production server for web applications",
-    created: "2024-01-15",
-    lastUpdate: "2024-03-10",
-  },
-  {
-    id: 2,
-    category: "Virtualization",
-    parentId: "PAR002",
-    assetId: "AST002",
-    assetType: "VM Host",
-    hostname: "vmhost-01",
-    ipAddress: "192.168.1.20",
-    osName: "VMware ESXi",
-    osVersion: "7.0",
-    vendor: "VMware",
-    location: "Data Center A",
-    ownerDepartment: "Infrastructure",
-    responsiblePerson: "Jane Smith",
-    status: "Active",
-    description: "Virtual machine host server",
-    created: "2024-01-20",
-    lastUpdate: "2024-03-08",
-  },
-  {
-    id: 3,
-    category: "Security",
-    parentId: "PAR003",
-    assetId: "AST003",
-    assetType: "Firewall",
-    hostname: "fw-edge-01",
-    ipAddress: "192.168.1.254",
-    osName: "Fortinet FortiOS",
-    osVersion: "7.2",
-    vendor: "Fortinet",
-    location: "Data Center A",
-    ownerDepartment: "Security Team",
-    responsiblePerson: "Bob Wilson",
-    status: "Maintenance",
-    description: "Edge firewall for network security",
-    created: "2024-02-01",
-    lastUpdate: "2024-03-12",
-  },
-];
+const getConditionBadgeVariant = (condition: string) => {
+  const conditionLower = condition?.toLowerCase() || "";
+  if (conditionLower === "good" || conditionLower === "baik") return "success";
+  if (conditionLower === "fair" || conditionLower === "cukup") return "warning";
+  if (conditionLower === "poor" || conditionLower === "rusak") return "destructive";
+  return "secondary";
+};
 
 const CMDB = () => {
   const navigate = useNavigate();
-  const [currentPage, setCurrentPage] = useState(1);
-  const [isStatusModalOpen, setIsStatusModalOpen] = useState(false);
-  const [selectedAsset, setSelectedAsset] = useState<typeof mockAssets[0] | null>(null);
-  const [newStatus, setNewStatus] = useState("");
+  const [searchQuery, setSearchQuery] = useState("");
+  const [statusFilter, setStatusFilter] = useState("all");
+  const [assets, setAssets] = useState<CMDBItem[]>([]);
+  const [loading, setLoading] = useState(true);
 
-  const categories = [
-    { icon: Server, count: 48, label: "Infrastructure", iconColor: "#3B82F6" },
-    { icon: Network, count: 156, label: "Virtualization", iconColor: "#8B5CF6" },
-    { icon: Laptop, count: 67, label: "End User Devices", iconColor: "#EC4899" },
-    { icon: Truck, count: 24, label: "Non-TI Supporting Assets", iconColor: "#F59E0B" },
-    { icon: FileCode, count: 89, label: "Software & Logical CI", iconColor: "#10B981" },
-    { icon: Globe, count: 32, label: "Network & Connectivity", iconColor: "#06B6D4" },
-    { icon: Lock, count: 45, label: "Security", iconColor: "#EF4444" },
-    { icon: Wrench, count: 28, label: "Services", iconColor: "#8B5CF6" },
-    { icon: FileText, count: 52, label: "Documentation & Knowledge", iconColor: "#3B82F6" },
-    { icon: Users, count: 120, label: "People & Organization", iconColor: "#EC4899" },
-    { icon: Cloud, count: 38, label: "Cloud & External Service", iconColor: "#06B6D4" },
-    { icon: Building, count: 15, label: "Environment & Facility", iconColor: "#64748B" },
-  ];
+  useEffect(() => {
+    const fetchAssets = async () => {
+      console.log("[CMDB] Fetching assets...");
+      try {
+        const response = await api.getAssets();
+        console.log("[CMDB] Assets received:", response);
+        
+        // Extract data array from response.data
+        const dataArray = response?.data || response || [];
+        const formattedAssets = (Array.isArray(dataArray) ? dataArray : []).map((item: any) => ({
+          id: item.id || "",
+          kode_bmd: item.kode_bmd || "",
+          name: item.nama_aset || item.name || "",
+          category: item.kategori || item.category || "",
+          subCategory: item.sub_kategori || item.sub_category || "",
+          serialNumber: item.nomor_seri || item.serial_number || "",
+          condition: item.kondisi || item.condition || "",
+          status: item.status || "",
+          dinas: item.penanggung_jawab || item.dinas || "",
+          location: item.lokasi || item.location || "",
+        }));
+        
+        console.log("[CMDB] Formatted assets:", formattedAssets);
+        setAssets(formattedAssets);
+      } catch (error) {
+        console.error("[CMDB] Failed to fetch assets:", error);
+      } finally {
+        setLoading(false);
+      }
+    };
 
-  const handleCategoryClick = (label: string) => {
-    navigate(`/cmdb/${encodeURIComponent(label)}`);
-  };
+    fetchAssets();
+  }, []);
 
-  const getStatusColor = (status: string) => {
-    switch (status.toLowerCase()) {
-      case "active":
-        return "bg-green-100 text-green-800 border-green-300";
-      case "inactive":
-        return "bg-gray-100 text-gray-800 border-gray-300";
-      case "maintenance":
-        return "bg-yellow-100 text-yellow-800 border-yellow-300";
-      default:
-        return "bg-blue-100 text-blue-800 border-blue-300";
-    }
-  };
-
-  const getCategoryColor = (cat: string) => {
-    return "bg-blue-100 text-blue-800 border-blue-300";
-  };
-
-  const handleChangeStatus = (asset: typeof mockAssets[0]) => {
-    setSelectedAsset(asset);
-    setNewStatus(asset.status);
-    setIsStatusModalOpen(true);
-  };
-
-  const handleStatusSubmit = () => {
-    // Handle status update logic here
-    setIsStatusModalOpen(false);
-    setSelectedAsset(null);
-  };
+  const filteredData = assets.filter((item) => {
+    const matchesSearch = item.id.toLowerCase().includes(searchQuery.toLowerCase()) || 
+                         item.name.toLowerCase().includes(searchQuery.toLowerCase()) ||
+                         item.serialNumber.toLowerCase().includes(searchQuery.toLowerCase());
+    const matchesStatus = statusFilter === "all" || 
+                         item.status.toLowerCase() === statusFilter.toLowerCase();
+    return matchesSearch && matchesStatus;
+  });
 
   return (
-    <div>
-      <h1
-        className="text-5xl font-bold mb-8"
-        style={{ color: "#253040" }}
-      >
-        CMDB
-      </h1>
+    <div className="space-y-6">
+      <h1 className="page-title">CMDB</h1>
 
-      <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-6 mb-12">
-        {categories.map((category) => (
-          <CategoryCard
-            key={category.label}
-            icon={category.icon}
-            count={category.count}
-            label={category.label}
-            iconColor={category.iconColor}
-            onClick={() => handleCategoryClick(category.label)}
-          />
-        ))}
-      </div>
+      <Card className="p-4">
+        <div className="flex flex-wrap items-center gap-4">
+          <div className="relative flex-1 min-w-[250px]">
+            <Search className="absolute left-3 top-1/2 -translate-y-1/2 h-4 w-4 text-muted-foreground" />
+            <Input placeholder="Search asset..." value={searchQuery} onChange={(e) => setSearchQuery(e.target.value)} className="pl-10" />
+          </div>
+          <Select value={statusFilter} onValueChange={setStatusFilter}>
+            <SelectTrigger className="w-[150px]"><SelectValue placeholder="All Status" /></SelectTrigger>
+            <SelectContent>
+              <SelectItem value="all">All Status</SelectItem>
+              <SelectItem value="aktif">Aktif</SelectItem>
+              <SelectItem value="tidak aktif">Tidak Aktif</SelectItem>
+              <SelectItem value="maintenance">Maintenance</SelectItem>
+              <SelectItem value="retired">Retired</SelectItem>
+            </SelectContent>
+          </Select>
+        </div>
+      </Card>
+
+      <Card className="overflow-hidden">
+        <Table>
+          <TableHeader>
+            <TableRow>
+              <TableHead>BMD ID</TableHead>
+              <TableHead>Serial Number</TableHead>
+              <TableHead>Category</TableHead>
+              <TableHead>Sub Category</TableHead>
+              <TableHead>Condition</TableHead>
+              <TableHead>Status</TableHead>
+              <TableHead>Location</TableHead>
+              <TableHead>Action</TableHead>
+            </TableRow>
+          </TableHeader>
+          <TableBody>
+            {loading ? (
+              <TableRow>
+                <TableCell colSpan={8} className="text-center py-8 text-muted-foreground">
+                  Loading...
+                </TableCell>
+              </TableRow>
+            ) : filteredData.length === 0 ? (
+              <TableRow>
+                <TableCell colSpan={8} className="text-center py-8 text-muted-foreground">
+                  No assets found
+                </TableCell>
+              </TableRow>
+            ) : (
+              filteredData.map((item) => (
+                <TableRow key={item.id}>
+                  <TableCell>
+                    <span className="font-semibold text-blue-700">{item.kode_bmd || "-"}</span>
+                  </TableCell>
+                  <TableCell>
+                    <span className="text-gray-700">{item.serialNumber || "-"}</span>
+                  </TableCell>
+                  <TableCell>{item.category}</TableCell>
+                  <TableCell>{item.subCategory}</TableCell>
+                  <TableCell>
+                    <Badge variant={getConditionBadgeVariant(item.condition) as any}>{item.condition}</Badge>
+                  </TableCell>
+                  <TableCell>
+                    <Badge variant={getStatusBadgeVariant(item.status) as any}>{item.status}</Badge>
+                  </TableCell>
+                  <TableCell>{item.location}</TableCell>
+                  <TableCell>
+                    <DropdownMenu>
+                      <DropdownMenuTrigger asChild>
+                        <Button variant="ghost" size="icon" className="h-8 w-8">
+                          <MoreHorizontal className="h-4 w-4" />
+                        </Button>
+                      </DropdownMenuTrigger>
+                      <DropdownMenuContent align="end" className="bg-card">
+                        <DropdownMenuItem onClick={() => navigate(`/cmdb/${item.id}`)}>Detail</DropdownMenuItem>
+                        <DropdownMenuItem onClick={() => navigate(`/cmdb/${item.id}/history`)}>History</DropdownMenuItem>
+                      </DropdownMenuContent>
+                    </DropdownMenu>
+                  </TableCell>
+                </TableRow>
+              ))
+            )}
+          </TableBody>
+        </Table>
+      </Card>
     </div>
   );
 };

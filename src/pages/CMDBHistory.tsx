@@ -1,150 +1,148 @@
-import { useState } from "react";
+import { useState, useEffect } from "react";
 import { useNavigate, useParams } from "react-router-dom";
-import { ArrowLeft } from "lucide-react";
-import {
-  Table,
-  TableBody,
-  TableCell,
-  TableHead,
-  TableHeader,
-  TableRow,
-} from "@/components/ui/table";
-import {
-  Pagination,
-  PaginationContent,
-  PaginationItem,
-  PaginationLink,
-  PaginationNext,
-  PaginationPrevious,
-} from "@/components/ui/pagination";
+import { ArrowLeft, Search } from "lucide-react";
+import { Button } from "@/components/ui/button";
+import { Card } from "@/components/ui/card";
+import { Input } from "@/components/ui/input";
+import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
+import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from "@/components/ui/table";
+import { api } from "@/lib/api";
 
-const mockHistory = [
-  {
-    historyId: "HIS001",
-    assetId: "AST001",
-    changeType: "Status Update",
-    oldValue: "Maintenance",
-    newValue: "Active",
-    changedBy: "John Doe",
-    changedAt: "2024-03-10 14:35:22",
-  },
-  {
-    historyId: "HIS002",
-    assetId: "AST001",
-    changeType: "IP Address",
-    oldValue: "192.168.1.9",
-    newValue: "192.168.1.10",
-    changedBy: "Jane Smith",
-    changedAt: "2024-03-05 09:20:15",
-  },
-  {
-    historyId: "HIS003",
-    assetId: "AST001",
-    changeType: "OS Version",
-    oldValue: "Ubuntu 20.04 LTS",
-    newValue: "Ubuntu 22.04 LTS",
-    changedBy: "John Doe",
-    changedAt: "2024-02-28 16:45:00",
-  },
-  {
-    historyId: "HIS004",
-    assetId: "AST001",
-    changeType: "Location",
-    oldValue: "Data Center B - Rack 5",
-    newValue: "Data Center A - Rack 12",
-    changedBy: "IT Admin",
-    changedAt: "2024-02-15 11:10:30",
-  },
-];
+interface HistoryItem {
+  id: string;
+  changeType: string;
+  beforeValue: string;
+  afterValue: string;
+  changedBy: string;
+  changeDate: string;
+}
 
 const CMDBHistory = () => {
   const navigate = useNavigate();
   const { id } = useParams();
-  const [currentPage, setCurrentPage] = useState(1);
+  const [searchQuery, setSearchQuery] = useState("");
+  const [changeTypeFilter, setChangeTypeFilter] = useState("all");
+  const [changedByFilter, setChangedByFilter] = useState("all");
+  const [historyData, setHistoryData] = useState<HistoryItem[]>([]);
+  const [loading, setLoading] = useState(true);
+
+  useEffect(() => {
+    const fetchHistory = async () => {
+      console.log(`[CMDBHistory] Fetching asset history for ID: ${id}...`);
+      try {
+        const response = await api.getAssetHistory(id || "");
+        console.log("[CMDBHistory] History data received:", response);
+        
+        // Extract data from response.data
+        const dataArray = response?.data || response || [];
+        console.log("[CMDBHistory] Extracted data:", dataArray);
+        
+        const formattedHistory = (Array.isArray(dataArray) ? dataArray : []).map((item: any) => ({
+          id: item.id || item.history_id || "",
+          changeType: item.change_type || item.field_changed || "",
+          beforeValue: item.before_value || item.old_value || "",
+          afterValue: item.after_value || item.new_value || "",
+          changedBy: item.changed_by || item.user || "",
+          changeDate: item.change_date || item.created_at || "",
+        }));
+        
+        setHistoryData(formattedHistory);
+      } catch (error) {
+        console.error("[CMDBHistory] Failed to fetch history:", error);
+      } finally {
+        setLoading(false);
+      }
+    };
+
+    if (id) {
+      fetchHistory();
+    }
+  }, [id]);
+
+  const uniqueChangeTypes = [...new Set(historyData.map(item => item.changeType).filter(Boolean))];
+  const uniqueChangedBy = [...new Set(historyData.map(item => item.changedBy).filter(Boolean))];
+
+  const filteredData = historyData.filter((item) => {
+    const matchesSearch = item.id.toLowerCase().includes(searchQuery.toLowerCase()) ||
+                         item.beforeValue.toLowerCase().includes(searchQuery.toLowerCase()) ||
+                         item.afterValue.toLowerCase().includes(searchQuery.toLowerCase());
+    const matchesChangeType = changeTypeFilter === "all" || item.changeType === changeTypeFilter;
+    const matchesChangedBy = changedByFilter === "all" || item.changedBy === changedByFilter;
+    return matchesSearch && matchesChangeType && matchesChangedBy;
+  });
 
   return (
-    <div>
-      <div className="flex items-center gap-4 mb-8">
-        <button
-          onClick={() => navigate(-1)}
-          className="text-gray-600 hover:text-gray-900 transition-colors"
-          aria-label="Back"
-        >
-          <ArrowLeft size={24} />
-        </button>
-        <h1 className="text-5xl font-bold" style={{ color: "#253040" }}>
-          Change History
-        </h1>
+    <div className="space-y-6">
+      <div className="flex items-center gap-3">
+        <Button variant="ghost" size="icon" onClick={() => navigate(-1)} className="h-9 w-9">
+          <ArrowLeft className="h-5 w-5" />
+        </Button>
+        <h1 className="page-title">Asset History - {id}</h1>
       </div>
 
-      {/* History Table */}
-      <div
-        className="rounded-lg overflow-hidden shadow-sm mb-6"
-        style={{
-          backgroundColor: "#FFFFFF",
-          border: "1px solid #E5E7EB",
-        }}
-      >
+      <Card className="p-4">
+        <div className="flex flex-wrap items-center gap-4">
+          <div className="relative flex-1 min-w-[200px]">
+            <Search className="absolute left-3 top-1/2 -translate-y-1/2 h-4 w-4 text-muted-foreground" />
+            <Input placeholder="Search history..." value={searchQuery} onChange={(e) => setSearchQuery(e.target.value)} className="pl-10" />
+          </div>
+          <Select value={changeTypeFilter} onValueChange={setChangeTypeFilter}>
+            <SelectTrigger className="w-[150px]"><SelectValue placeholder="Change Type" /></SelectTrigger>
+            <SelectContent>
+              <SelectItem value="all">All Types</SelectItem>
+              {uniqueChangeTypes.map((type) => <SelectItem key={type} value={type}>{type}</SelectItem>)}
+            </SelectContent>
+          </Select>
+          <Select value={changedByFilter} onValueChange={setChangedByFilter}>
+            <SelectTrigger className="w-[150px]"><SelectValue placeholder="Changed By" /></SelectTrigger>
+            <SelectContent>
+              <SelectItem value="all">All Users</SelectItem>
+              {uniqueChangedBy.map((user) => <SelectItem key={user} value={user}>{user}</SelectItem>)}
+            </SelectContent>
+          </Select>
+        </div>
+      </Card>
+
+      <Card className="overflow-hidden">
         <Table>
           <TableHeader>
-            <TableRow style={{ backgroundColor: "#384E66" }}>
-              <TableHead className="text-white font-semibold">History ID</TableHead>
-              <TableHead className="text-white font-semibold">Asset ID</TableHead>
-              <TableHead className="text-white font-semibold">Change Type</TableHead>
-              <TableHead className="text-white font-semibold">Old Value</TableHead>
-              <TableHead className="text-white font-semibold">New Value</TableHead>
-              <TableHead className="text-white font-semibold">Changed By</TableHead>
-              <TableHead className="text-white font-semibold">Changed At</TableHead>
+            <TableRow>
+              <TableHead>History ID</TableHead>
+              <TableHead>Change Type</TableHead>
+              <TableHead>Before Value</TableHead>
+              <TableHead>After Value</TableHead>
+              <TableHead>Changed By</TableHead>
+              <TableHead>Change Date/Time</TableHead>
             </TableRow>
           </TableHeader>
           <TableBody>
-            {mockHistory.map((record) => (
-              <TableRow key={record.historyId} className="hover:bg-gray-50">
-                <TableCell className="font-medium">{record.historyId}</TableCell>
-                <TableCell>{record.assetId}</TableCell>
-                <TableCell>{record.changeType}</TableCell>
-                <TableCell className="text-gray-600">{record.oldValue}</TableCell>
-                <TableCell className="text-green-700 font-medium">{record.newValue}</TableCell>
-                <TableCell>{record.changedBy}</TableCell>
-                <TableCell>{record.changedAt}</TableCell>
+            {loading ? (
+              <TableRow>
+                <TableCell colSpan={6} className="text-center py-8 text-muted-foreground">
+                  Loading...
+                </TableCell>
               </TableRow>
-            ))}
+            ) : filteredData.length === 0 ? (
+              <TableRow>
+                <TableCell colSpan={6} className="text-center py-8 text-muted-foreground">
+                  No history found
+                </TableCell>
+              </TableRow>
+            ) : (
+              filteredData.map((item) => (
+                <TableRow key={item.id}>
+                  <TableCell className="font-medium">{item.id}</TableCell>
+                  <TableCell>{item.changeType}</TableCell>
+                  <TableCell className="text-muted-foreground">{item.beforeValue}</TableCell>
+                  <TableCell className="font-medium">{item.afterValue}</TableCell>
+                  <TableCell>{item.changedBy}</TableCell>
+                  <TableCell>{item.changeDate ? new Date(item.changeDate).toLocaleString('id-ID') : "-"}</TableCell>
+                </TableRow>
+              ))
+            )}
           </TableBody>
         </Table>
-      </div>
-
-      {/* Pagination */}
-      <Pagination>
-        <PaginationContent>
-          <PaginationItem>
-            <PaginationPrevious
-              onClick={() => setCurrentPage(Math.max(1, currentPage - 1))}
-              className={currentPage === 1 ? "pointer-events-none opacity-50" : "cursor-pointer"}
-            />
-          </PaginationItem>
-          <PaginationItem>
-            <PaginationLink isActive={currentPage === 1} onClick={() => setCurrentPage(1)}>
-              1
-            </PaginationLink>
-          </PaginationItem>
-          <PaginationItem>
-            <PaginationLink isActive={currentPage === 2} onClick={() => setCurrentPage(2)}>
-              2
-            </PaginationLink>
-          </PaginationItem>
-          <PaginationItem>
-            <PaginationLink isActive={currentPage === 3} onClick={() => setCurrentPage(3)}>
-              3
-            </PaginationLink>
-          </PaginationItem>
-          <PaginationItem>
-            <PaginationNext
-              onClick={() => setCurrentPage(Math.min(3, currentPage + 1))}
-              className={currentPage === 3 ? "pointer-events-none opacity-50" : "cursor-pointer"}
-            />
-          </PaginationItem>
-        </PaginationContent>
-      </Pagination>
+      </Card>
     </div>
   );
 };

@@ -2,50 +2,107 @@
 @tailwind components;
 @tailwind utilities;
 
-/* Definition of the design system. All colors, gradients, fonts, etc should be defined here. 
-All colors MUST be HSL.
-*/
-
 @layer base {
   :root {
-    --background: 210 20% 95.5%;
-    --foreground: 0 0% 0%;
+    /* Core colors */
+    --background: 220 14% 96%;
+    --foreground: 210 26% 24%;
 
-    --card: 0 0% 99.2%;
-    --card-foreground: 0 0% 0%;
+    /* Card - Clean white */
+    --card: 0 0% 100%;
+    --card-foreground: 210 26% 24%;
 
+    /* Popover */
     --popover: 0 0% 100%;
-    --popover-foreground: 0 0% 0%;
+    --popover-foreground: 210 26% 24%;
 
-    --primary: 208 31% 32%;
+    /* Primary - Dark slate blue */
+    --primary: 210 26% 31%;
     --primary-foreground: 0 0% 100%;
 
-    --secondary: 210 40% 96.1%;
-    --secondary-foreground: 208 31% 32%;
+    /* Secondary */
+    --secondary: 220 14% 96%;
+    --secondary-foreground: 210 26% 24%;
 
-    --muted: 210 40% 96.1%;
-    --muted-foreground: 215.4 16.3% 46.9%;
+    /* Muted */
+    --muted: 220 14% 92%;
+    --muted-foreground: 215 16% 47%;
 
-    --accent: 210 40% 96.1%;
-    --accent-foreground: 208 31% 32%;
+    /* Accent */
+    --accent: 210 20% 40%;
+    --accent-foreground: 0 0% 100%;
 
-    --destructive: 0 84.2% 60.2%;
+    /* Destructive */
+    --destructive: 0 84% 60%;
     --destructive-foreground: 0 0% 100%;
 
-    --border: 208 31% 32%;
-    --input: 214.3 31.8% 91.4%;
-    --ring: 208 31% 32%;
+    /* Success */
+    --success: 142 71% 45%;
+    --success-foreground: 0 0% 100%;
 
+    /* Warning */
+    --warning: 38 92% 50%;
+    --warning-foreground: 0 0% 100%;
+
+    /* Info */
+    --info: 199 89% 48%;
+    --info-foreground: 0 0% 100%;
+
+    /* Border & Input */
+    --border: 220 13% 86%;
+    --input: 220 13% 86%;
+    --ring: 210 26% 31%;
+
+    /* Radius */
     --radius: 0.5rem;
 
-    --header-bg: 208 31% 32%;
-    --sidebar-bg: 208 31% 32%;
-    --sidebar-active: 209 22% 26%;
-    --active-state: 0 0% 98%;
-    
-    --chart-primary: 208 31% 32%;
-    --chart-secondary: 209 22% 26%;
-    --chart-accent: 160 60% 45%;
+    /* Sidebar */
+    --sidebar-bg: 210 26% 31%;
+    --sidebar-hover: 210 28% 26%;
+    --sidebar-active: 210 30% 22%;
+
+    /* Table */
+    --table-header: 210 26% 31%;
+    --table-header-foreground: 0 0% 100%;
+    --table-row-hover: 220 14% 96%;
+  }
+
+  .dark {
+    --background: 210 26% 18%;
+    --foreground: 0 0% 98%;
+
+    --card: 210 26% 22%;
+    --card-foreground: 0 0% 98%;
+
+    --popover: 210 26% 22%;
+    --popover-foreground: 0 0% 98%;
+
+    --primary: 0 0% 98%;
+    --primary-foreground: 210 26% 18%;
+
+    --secondary: 210 26% 26%;
+    --secondary-foreground: 0 0% 98%;
+
+    --muted: 210 26% 26%;
+    --muted-foreground: 220 10% 70%;
+
+    --accent: 210 26% 30%;
+    --accent-foreground: 0 0% 98%;
+
+    --destructive: 0 62% 50%;
+    --destructive-foreground: 0 0% 100%;
+
+    --border: 210 26% 28%;
+    --input: 210 26% 28%;
+    --ring: 0 0% 98%;
+
+    --sidebar-bg: 210 26% 18%;
+    --sidebar-hover: 210 26% 22%;
+    --sidebar-active: 210 26% 26%;
+
+    --table-header: 210 26% 26%;
+    --table-header-foreground: 0 0% 98%;
+    --table-row-hover: 210 26% 24%;
   }
 }
 
@@ -55,6 +112,49 @@ All colors MUST be HSL.
   }
 
   body {
-    @apply bg-background text-foreground;
+    @apply bg-background text-foreground font-sans antialiased;
+    font-family: 'Inter', system-ui, -apple-system, sans-serif;
+  }
+
+  /* Page Title */
+  .page-title {
+    @apply text-2xl font-bold text-foreground tracking-tight;
+  }
+
+  /* Unified Card Style */
+  .unified-card {
+    @apply bg-card rounded-lg border border-border;
+  }
+
+  /* Unified Table Header */
+  .unified-table-header {
+    @apply bg-primary text-primary-foreground font-semibold;
+  }
+}
+
+@layer components {
+  /* Status Badge Variants */
+  .badge-success {
+    @apply bg-emerald-50 text-emerald-700 border-emerald-200;
+  }
+  
+  .badge-warning {
+    @apply bg-amber-50 text-amber-700 border-amber-200;
+  }
+  
+  .badge-info {
+    @apply bg-sky-50 text-sky-700 border-sky-200;
+  }
+  
+  .badge-danger {
+    @apply bg-red-50 text-red-700 border-red-200;
+  }
+  
+  .badge-purple {
+    @apply bg-purple-50 text-purple-700 border-purple-200;
+  }
+  
+  .badge-neutral {
+    @apply bg-slate-50 text-slate-700 border-slate-200;
   }
 }
