@@ -3,7 +3,6 @@ import { Menu, Bell, User } from "lucide-react";
 import { useNavigate } from "react-router-dom";
 import { toast } from "sonner";
 import { getToken, getUser, logout, API_BASE } from "@/lib/auth";
-import SaktiLogo from "@/assets/sakti-logo.png";
 
 interface Notification {
   id: string;
@@ -144,7 +143,7 @@ const Header = ({ onToggleSidebar }: HeaderProps) => {
           </button>
 
           <img
-          src="/src/assets/sakti-logo.png"
+          src="/sakti-logo.png"
           alt="SAKTI Logo"
           className="h-12 w-auto"
           style={{ transform: "scale(0.9)" }}

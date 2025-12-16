@@ -4,7 +4,6 @@ import { toast } from "sonner";
 import { Eye, EyeOff } from "lucide-react";
 import { api } from "@/lib/api";
 import { isAuthenticated } from "@/lib/auth";
-import LogoSakti from "@/assets/logo-sakti.png";
 
 const Login = () => {
   const [username, setUsername] = useState("");
@@ -127,7 +126,7 @@ const Login = () => {
 
 <div className="text-center mb-6">
   <img
-    src="/src/assets/logo-sakti.png"
+    src="/logo-sakti.png"
     alt="SAKTI Logo"
     className="h-20 mx-auto drop-shadow-lg"
   />
