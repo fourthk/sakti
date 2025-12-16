@@ -4,6 +4,7 @@ import { toast } from "sonner";
 import { Eye, EyeOff } from "lucide-react";
 import { api } from "@/lib/api";
 import { isAuthenticated } from "@/lib/auth";
+import LogoSakti from "@/assets/logo-sakti.png";
 
 const Login = () => {
   const [username, setUsername] = useState("");

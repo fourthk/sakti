@@ -3,7 +3,7 @@ import { Menu, Bell, User } from "lucide-react";
 import { useNavigate } from "react-router-dom";
 import { toast } from "sonner";
 import { getToken, getUser, logout, API_BASE } from "@/lib/auth";
-import SaktiLogo from "@/components/SaktiLogo";
+import SaktiLogo from "@/assets/sakti-logo.png";
 
 interface Notification {
   id: string;
