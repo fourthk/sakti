@@ -8,26 +8,33 @@ const PatchScheduleDetail = () => {
   const navigate = useNavigate();
   const { id } = useParams();
 
+  // added to prevent ReferenceError
+  const data: any = {};
+
   // Mock data - in real app would fetch based on id
   const schedule = {
     id: id,
     patchId: "PCH-001",
-    title: "DBMS Minor Update",
+    title: "Update Server Configuration",
     date: "20/1/2024",
     time: "14:00 - 16:00",
     assignee: "John Doe",
     status: "Upcoming",
     location: "Data Center A",
-    description: "Apply minor database update to improve stability and performance.",
-    prerequisites: "Full backup completed, maintenance window approved",
-    impact: "Database will be unavailable for approximately 15 minutes",
-    version: "v2.0.0 → v2.1.0",
+    description: "Update server configuration to improve performance and security.",
+    prerequisites: "Backup completed, stakeholders notified",
+    impact: "Minimal downtime expected (5-10 minutes)",
   };
 
   return (
     <div className="space-y-6">
       <div className="flex items-center gap-3">
-        <Button variant="ghost" size="icon" onClick={() => navigate(-1)} className="h-9 w-9">
+        <Button
+          variant="ghost"
+          size="icon"
+          onClick={() => navigate(-1)}
+          className="h-9 w-9"
+        >
           <ArrowLeft className="h-5 w-5" />
         </Button>
         <h1 className="page-title">Schedule Detail - {id}</h1>
@@ -59,10 +66,6 @@ const PatchScheduleDetail = () => {
               <span>{schedule.location}</span>
             </div>
           </div>
-          <div className="pt-2">
-            <span className="text-sm text-muted-foreground">Version: </span>
-            <span className="font-medium">{schedule.version}</span>
-          </div>
         </CardContent>
       </Card>
 
@@ -75,19 +78,40 @@ const PatchScheduleDetail = () => {
             <h4 className="font-medium text-foreground mb-1">Description</h4>
             <p className="text-muted-foreground">{schedule.description}</p>
           </div>
-          <div>
-            <h4 className="font-medium text-foreground mb-1">Prerequisites</h4>
-            <p className="text-muted-foreground">{schedule.prerequisites}</p>
-          </div>
-          <div>
-            <h4 className="font-medium text-foreground mb-1">Expected Impact</h4>
-            <p className="text-muted-foreground">{schedule.impact}</p>
+
+          <div className="grid grid-cols-4 gap-4">
+            <div className="border border-border rounded-lg p-4 text-center bg-card">
+              <p className="text-sm text-muted-foreground">Skor Dampak</p>
+              <p className="text-2xl font-bold text-foreground">
+                {data.skor_dampak || "-"}
+              </p>
+            </div>
+            <div className="border border-border rounded-lg p-4 text-center bg-card">
+              <p className="text-sm text-muted-foreground">Skor Kemungkinan</p>
+              <p className="text-2xl font-bold text-foreground">
+                {data.skor_kemungkinan || "-"}
+              </p>
+            </div>
+            <div className="border border-border rounded-lg p-4 text-center bg-card">
+              <p className="text-sm text-muted-foreground">Skor Exposure</p>
+              <p className="text-2xl font-bold text-foreground">
+                {data.skor_exposure || "-"}
+              </p>
+            </div>
+            <div className="border border-destructive/30 rounded-lg p-4 text-center bg-red-50">
+              <p className="text-sm text-destructive">Risk Score</p>
+              <p className="text-2xl font-bold text-destructive">
+                {data.risk_score || "-"}
+              </p>
+            </div>
           </div>
         </CardContent>
       </Card>
 
       <div className="flex justify-end">
-        <Button variant="outline" onClick={() => navigate(-1)}>Back</Button>
+        <Button variant="outline" onClick={() => navigate(-1)}>
+          Back
+        </Button>
       </div>
     </div>
   );

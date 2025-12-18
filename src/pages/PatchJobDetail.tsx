@@ -67,7 +67,7 @@ const formatDateTime = (dateStr: string) => {
   });
 };
 
-const PatchResultsDetail = () => {
+const PatchJobDetail = () => {
   const navigate = useNavigate();
   const { id } = useParams();
   const [patchJob, setPatchJob] = useState<PatchJobData | null>(null);
@@ -278,4 +278,4 @@ const PatchResultsDetail = () => {
   );
 };
 
-export default PatchResultsDetail;
+export default PatchJobDetail;

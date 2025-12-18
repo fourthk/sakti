@@ -51,7 +51,7 @@ export const getMenuItemsByRole = (role: UserRole) => {
       return [
         { name: "Dashboard", path: "/" },
         { name: "Approval", path: "/approval" },
-        { name: "Patch Job", path: "/patch-job" },
+        { name: "Patch Job", path: "/patch-jobs" },
         { name: "CMDB", path: "/cmdb" },
       ];
     default:

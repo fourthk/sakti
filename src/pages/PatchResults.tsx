@@ -114,7 +114,6 @@ const PatchResults = () => {
           <TableHeader>
             <TableRow>
               <TableHead>Job ID</TableHead>
-              <TableHead>Patch ID</TableHead>
               <TableHead>Scope</TableHead>
               <TableHead>Version</TableHead>
               <TableHead>Executed By</TableHead>
@@ -137,7 +136,6 @@ const PatchResults = () => {
               filteredData.map((item) => (
                 <TableRow key={item.id}>
                   <TableCell className="font-medium">{item.job_id || "-"}</TableCell>
-                  <TableCell>{item.patch_id || "-"}</TableCell>
                   <TableCell>{item.scope_asset || item.title || "-"}</TableCell>
                   <TableCell>{formatVersion(item.version_before, item.version_after)}</TableCell>
                   <TableCell>{item.technician_name || "-"}</TableCell>

@@ -3,21 +3,19 @@ import { Calendar, Clock, User } from "lucide-react";
 import { Card } from "@/components/ui/card";
 
 interface ScheduleItem {
-  id: string;
   changeId: string;
   title: string;
   date: string;
   time: string;
-  assignee: string;
   status: "Upcoming" | "In Progress" | "Completed";
 }
 
 const mockSchedules: ScheduleItem[] = [
-  { id: "SCH-001", changeId: "CR-001", title: "Update Server Configuration", date: "20/1/2024", time: "14:00 - 16:00", assignee: "John Doe", status: "Upcoming" },
-  { id: "SCH-002", changeId: "CR-002", title: "Deploy New Application", date: "22/1/2024", time: "10:00 - 12:00", assignee: "Jane Smith", status: "Upcoming" },
-  { id: "SCH-003", changeId: "CR-003", title: "Database Migration", date: "25/1/2024", time: "20:00 - 23:00", assignee: "Mike Johnson", status: "Upcoming" },
-  { id: "SCH-004", changeId: "CR-004", title: "Network Switch Upgrade", date: "18/1/2024", time: "08:00 - 10:00", assignee: "Sarah Wilson", status: "Completed" },
-  { id: "SCH-005", changeId: "CR-005", title: "Security Patch Installation", date: "19/1/2024", time: "22:00 - 23:30", assignee: "Tom Brown", status: "In Progress" },
+  { changeId: "CR-001", title: "Update Server Configuration", date: "20/1/2024", time: "14:00 - 16:00", status: "Upcoming" },
+  { changeId: "CR-002", title: "Deploy New Application", date: "22/1/2024", time: "10:00 - 12:00", status: "Upcoming" },
+  { changeId: "CR-003", title: "Database Migration", date: "25/1/2024", time: "20:00 - 23:00", status: "Upcoming" },
+  { changeId: "CR-004", title: "Network Switch Upgrade", date: "18/1/2024", time: "08:00 - 10:00", status: "Completed" },
+  { changeId: "CR-005", title: "Security Patch Installation", date: "19/1/2024", time: "22:00 - 23:30", status: "In Progress" },
 ];
 
 const ChangeSchedule = () => {
@@ -30,28 +28,30 @@ const ChangeSchedule = () => {
       <div className="space-y-4">
         {mockSchedules.map((schedule) => (
           <Card
-            key={schedule.id}
+            key={schedule.changeId}
             className="p-4 cursor-pointer hover:border-primary/50 transition-colors"
-            onClick={() => navigate(`/change-schedule/${schedule.id}`)}
+            onClick={() => navigate(`/change-schedule/${schedule.changeId}`)}
           >
-            <div className="space-y-2">
-              <div className="flex items-center gap-2 text-sm text-muted-foreground">
-                <span>{schedule.id}</span>
-                <span>•</span>
-                <span>{schedule.changeId}</span>
-              </div>
-              <h3 className="font-semibold text-foreground">{schedule.title}</h3>
-              <div className="flex items-center gap-4 text-sm text-muted-foreground">
-                <div className="flex items-center gap-1.5">
+            <div className="flex items-start justify-between gap-4">
+              <div className="space-y-2">
+                <div className="text-sm text-muted-foreground">
+                  {schedule.changeId}
+                </div>
+
+              <h3 className="font-semibold text-foreground">
+                {schedule.title}
+              </h3>
+
+              <div className="flex items-center gap-1.5 text-sm text-muted-foreground">
                   <Calendar className="h-4 w-4" />
                   <span>{schedule.date}</span>
                   <span>•</span>
                   <span>{schedule.time}</span>
                 </div>
-                <div className="flex items-center gap-1.5">
-                  <User className="h-4 w-4" />
-                  <span>{schedule.assignee}</span>
-                </div>
+              </div>
+
+              <div className="text-sm font-medium rounded px-2 py-1 bg-muted">
+                {schedule.status}
               </div>
             </div>
           </Card>

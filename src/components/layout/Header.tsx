@@ -1,272 +1,262 @@
 import { useState, useRef, useEffect } from "react";
-import { Menu, Bell, User } from "lucide-react";
+import {
+  Menu,
+  Bell,
+  User,
+  Mail,
+  LogOut,
+} from "lucide-react";
 import { useNavigate } from "react-router-dom";
 import { toast } from "sonner";
-import { getToken, getUser, logout, API_BASE } from "@/lib/auth";
+import { cn } from "@/lib/utils";
+import saktiLogo from "@/assets/sakti-logo.png";
+
+const API_BASE_URL =
+  "https://sakti-backend-674826252080.asia-southeast2.run.app";
 
 interface Notification {
   id: string;
-  message: string;
-  read: boolean;
+  title: string;
+  body: string;
+  channel: string;
+  sent_at: string;
+  read_at: string | null;
+  created_at: string;
+  cr_id: string | null;
 }
+
+interface UserData {
+  name: string;
+  email: string;
+  role: string;
+  instansi: string;
+}
+
 
 interface HeaderProps {
   onToggleSidebar: () => void;
 }
 
 const Header = ({ onToggleSidebar }: HeaderProps) => {
-  const [notificationsOpen, setNotificationsOpen] = useState(false);
-  const [userMenuOpen, setUserMenuOpen] = useState(false);
+  const [showNotif, setShowNotif] = useState(false);
+  const [showUser, setShowUser] = useState(false);
   const [notifications, setNotifications] = useState<Notification[]>([]);
-  const [userProfile, setUserProfile] = useState<any>(null);
-  const [showLogoutConfirm, setShowLogoutConfirm] = useState(false);
-  const notificationRef = useRef<HTMLDivElement>(null);
-  const userMenuRef = useRef<HTMLDivElement>(null);
+  const [user, setUser] = useState<UserData | null>(null);
+  const [loadingNotif, setLoadingNotif] = useState(false);
+
+  const notifRef = useRef<HTMLDivElement>(null);
+  const userRef = useRef<HTMLDivElement>(null);
   const navigate = useNavigate();
 
+  const unreadCount = notifications.filter((n) => !n.read).length;
+
   useEffect(() => {
-    const handleClickOutside = (event: MouseEvent) => {
+    const handler = (e: MouseEvent) => {
       if (
-        notificationRef.current &&
-        !notificationRef.current.contains(event.target as Node)
+        notifRef.current &&
+        !notifRef.current.contains(e.target as Node) &&
+        userRef.current &&
+        !userRef.current.contains(e.target as Node)
       ) {
-        setNotificationsOpen(false);
-      }
-      if (
-        userMenuRef.current &&
-        !userMenuRef.current.contains(event.target as Node)
-      ) {
-        setUserMenuOpen(false);
+        setShowNotif(false);
+        setShowUser(false);
       }
     };
-
-    document.addEventListener("mousedown", handleClickOutside);
-    return () => document.removeEventListener("mousedown", handleClickOutside);
+    document.addEventListener("mousedown", handler);
+    return () => document.removeEventListener("mousedown", handler);
   }, []);
 
-  const fetchNotifications = async () => {
-    const token = getToken();
-    if (!token) return;
+  const fetchProfile = async () => {
     try {
-      const res = await fetch(`${API_BASE}/notifications`, {
-        headers: { Authorization: `Bearer ${token}` },
+      const res = await fetch(`${API_BASE_URL}/auth/profile`, {
+        headers: {
+          Authorization: `Bearer ${localStorage.getItem("token")}`,
+        },
+      });
+      const json = await res.json();
+      setUser(json.data);
+    } catch (err) {
+      console.error(err);
+    }
+  };
+
+  const fetchNotifications = async () => {
+    try {
+      setLoadingNotif(true);
+      const res = await fetch(`${API_BASE_URL}/notifications`, {
+        headers: {
+          Authorization: `Bearer ${localStorage.getItem("token")}`,
+        },
       });
       const json = await res.json();
       setNotifications(json.data || []);
-    } catch {
-      setNotifications([]);
+    } catch (err) {
+      console.error("Error fetching notifications:", err);
+    } finally {
+      setLoadingNotif(false);
     }
   };
 
-  const fetchUserProfile = async () => {
-    const token = getToken();
-    if (!token) return;
+
+  const markAsRead = async (id: string) => {
     try {
-      const res = await fetch(`${API_BASE}/auth/profile`, {
-        headers: { Authorization: `Bearer ${token}` },
-      });
-      const json = await res.json();
-      setUserProfile(json.data || getUser());
-    } catch {
-      setUserProfile(getUser());
-    }
-  };
-
-  const handleNotificationClick = () => {
-    if (!notificationsOpen) {
-      fetchNotifications();
-    }
-    setNotificationsOpen(!notificationsOpen);
-    setUserMenuOpen(false);
-  };
-
-  const handleUserMenuClick = () => {
-    if (!userMenuOpen) {
-      fetchUserProfile();
-    }
-    setUserMenuOpen(!userMenuOpen);
-    setNotificationsOpen(false);
-  };
-
-  const handleMarkAsRead = async (id: string) => {
-    const token = getToken();
-    if (!token) return;
-    try {
-      await fetch(`${API_BASE}/notifications/${id}/read`, {
+      await fetch(`${API_BASE_URL}/notifications/${id}/read`, {
         method: "PUT",
-        headers: { Authorization: `Bearer ${token}` },
+        headers: {
+          Authorization: `Bearer ${localStorage.getItem("token")}`,
+        },
       });
-      setNotifications((prev) =>
-        prev.map((n) => (n.id === id ? { ...n, read: true } : n))
-      );
-    } catch {
-      // silent fail
+      fetchNotifications();
+    } catch (err) {
+      console.error("Error mark as read:", err);
     }
   };
 
-  const handleLogoutClick = () => {
-    setShowLogoutConfirm(true);
-    setUserMenuOpen(false);
+  const toggleNotif = () => {
+    setShowNotif(!showNotif);
+    setShowUser(false);
+    fetchNotifications();
   };
 
-  const confirmLogout = async () => {
-    const token = getToken();
+  const toggleUser = () => {
+    setShowUser((v) => !v);
+    setShowNotif(false);
+    fetchProfile();
+  };
+
+  const handleLogout = async () => {
     try {
-      await fetch(`${API_BASE}/auth/logout`, {
+      await fetch(`${API_BASE_URL}/auth/logout`, {
         method: "POST",
-        headers: { Authorization: `Bearer ${token}` },
+        headers: {
+          Authorization: `Bearer ${localStorage.getItem("token")}`,
+        },
       });
-    } catch {
-      // continue with logout even if API fails
-    }
-    logout();
+    } catch {}
+    localStorage.clear();
     toast.success("Logged out successfully");
     navigate("/login");
   };
 
-  const user = getUser();
-  const unreadCount = notifications.filter((n) => !n.read).length;
-
   return (
-    <>
-      <header
-        className="fixed top-0 left-0 right-0 z-50 flex items-center justify-between px-6 shadow"
-        style={{ height: "80px", backgroundColor: "#384E66" }}
-      >
-     <div className="flex items-center gap-4">
-          <button
-            type="button"
-            onClick={onToggleSidebar}
-            className="text-primary-foreground hover:bg-primary-foreground/10 p-2 rounded"
-          >
-            <Menu size={24} />
-          </button>
+    <header
+      className="fixed top-0 left-0 right-0 z-50 flex items-center justify-between px-6 shadow"
+      style={{ height: "80px", backgroundColor: "#384E66" }}
+    >
+      {/* LEFT */}
+      <div className="flex items-center gap-4">
+        <button
+          onClick={onToggleSidebar}
+          className="text-white hover:bg-white/10 p-2 rounded"
+        >
+          <Menu size={24} />
+        </button>
+        <img src={saktiLogo} alt="Logo" className="h-12" />
+      </div>
 
-          <img
-          src="/sakti-logo.png"
-          alt="SAKTI Logo"
-          className="h-12 w-auto"
-          style={{ transform: "scale(0.9)" }}
-          />
-        </div>
-
-        <div className="flex items-center gap-4">
-          <div ref={notificationRef} className="relative">
+      {/* RIGHT */}
+      <div className="flex items-center gap-4">
+        {/* NOTIF */}
+         <div className="relative" ref={notifRef}>
             <button
-              onClick={handleNotificationClick}
-              className="text-primary-foreground hover:bg-primary-foreground/10 p-2 rounded relative"
+              onClick={toggleNotif}
+              className="text-white hover:bg-white/10 p-2 rounded transition-colors relative"
             >
               <Bell size={24} />
-              {unreadCount > 0 && (
-                <span className="absolute top-1 right-1 w-2 h-2 bg-destructive rounded-full" />
+              {notifications.some((n) => !n.read_at) && (
+                <span className="absolute top-1 right-1 w-2 h-2 bg-red-500 rounded-full" />
               )}
             </button>
-            {notificationsOpen && (
-              <div
-                className="absolute right-0 top-full mt-2 w-72 rounded-lg shadow-lg border"
-                style={{ backgroundColor: "#FFFFFF" }}
-              >
-                <div className="p-3 border-b font-medium" style={{ color: "#384E66" }}>
-                  Notifications
+
+            {showNotif && (
+              <div className="absolute right-0 mt-2 w-80 bg-white rounded-lg shadow-lg z-50 overflow-hidden">
+                <div className="p-4 border-b bg-[#384E66]">
+                  <h3 className="text-white font-semibold">Notifikasi</h3>
                 </div>
-                <div className="max-h-64 overflow-y-auto">
-                  {notifications.length === 0 ? (
-                    <div className="p-4 text-center text-muted-foreground">
-                      No notifications
-                    </div>
-                  ) : (
-                    notifications.map((n) => (
+
+                {loadingNotif ? (
+                  <div className="p-4 text-center text-gray-500">Memuat...</div>
+                ) : notifications.length === 0 ? (
+                  <div className="p-4 text-center text-gray-500">
+                    Tidak ada notifikasi
+                  </div>
+                ) : (
+                  <div className="max-h-80 overflow-y-auto">
+                    {notifications.map((notif) => (
                       <div
-                        key={n.id}
-                        onClick={() => handleMarkAsRead(n.id)}
-                        className={`p-3 border-b cursor-pointer hover:bg-muted/50 ${
-                          !n.read ? "bg-muted/30" : ""
-                        }`}
+                        key={notif.id}
+                        className={cn(
+                          "p-4 border-b cursor-pointer hover:bg-gray-50",
+                          !notif.read_at && "bg-blue-50"
+                        )}
+                        onClick={() => markAsRead(notif.id)}
                       >
-                        <p className="text-sm" style={{ color: "#384E66" }}>
-                          {n.message}
+                        <div className="flex justify-between items-start">
+                          <p className="font-medium text-sm">{notif.title}</p>
+                          {!notif.read_at && (
+                            <span className="w-2 h-2 bg-blue-500 rounded-full" />
+                          )}
+                        </div>
+                        <p className="text-sm text-gray-600 mt-1">{notif.body}</p>
+                        <p className="text-xs text-gray-400 mt-2">
+                          {new Date(notif.created_at).toLocaleString()}
                         </p>
                       </div>
-                    ))
-                  )}
-                </div>
+                    ))}
+                  </div>
+                )}
               </div>
             )}
           </div>
 
-          <div ref={userMenuRef} className="relative">
-            <button
-              onClick={handleUserMenuClick}
-              className="text-primary-foreground hover:bg-primary-foreground/10 p-2 rounded-full"
-            >
-              <User size={24} />
-            </button>
-            {userMenuOpen && (
-              <div
-                className="absolute right-0 top-full mt-2 w-64 rounded-lg shadow-lg border"
-                style={{ backgroundColor: "#FFFFFF" }}
-              >
-                <div className="p-4">
-                  <p className="font-medium" style={{ color: "#384E66" }}>
-                    {userProfile?.name || user?.name || "User"}
-                  </p>
-                  <p className="text-sm text-muted-foreground">
-                    {userProfile?.email || user?.email || "email@example.com"}
-                  </p>
-                  <p className="text-sm text-muted-foreground capitalize mt-1">
-                    Role: {userProfile?.role || user?.role || "N/A"}
-                  </p>
-                  <p className="text-sm text-muted-foreground">
-                    Instansi: {userProfile?.instansi || user?.instansi || "N/A"}
-                  </p>
-                </div>
-                <div className="border-t">
-                  <button
-                    onClick={handleLogoutClick}
-                    className="w-full text-left px-4 py-3 text-sm hover:bg-muted/50"
-                    style={{ color: "#384E66" }}
-                  >
-                    Logout
-                  </button>
-                </div>
-              </div>
-            )}
-          </div>
-        </div>
-      </header>
-
-      {showLogoutConfirm && (
-        <div className="fixed inset-0 z-[100] flex items-center justify-center bg-foreground/50">
-          <div
-            className="rounded-lg shadow-lg p-6 w-80"
-            style={{ backgroundColor: "#FFFFFF" }}
+        {/* USER */}
+        <div ref={userRef} className="relative">
+          <button
+            onClick={toggleUser}
+            className="text-white hover:bg-white/10 p-2 rounded-full"
           >
-            <h3 className="text-lg font-medium mb-4" style={{ color: "#384E66" }}>
-              Confirm Logout
-            </h3>
-            <p className="text-sm text-muted-foreground mb-6">
-              Are you sure you want to logout?
-            </p>
-            <div className="flex gap-3">
+            <User size={24} />
+          </button>
+          {showUser && user && (
+            <div className="absolute right-0 mt-2 w-72 bg-white rounded-lg shadow-lg overflow-hidden">
+              <div className="p-4 bg-[#384E66] flex items-center gap-3">
+                <div className="w-12 h-12 rounded-full bg-white/20 flex items-center justify-center text-white text-xl font-bold">
+                  {user.name.charAt(0)}
+                </div>
+                <div>
+                  <p className="text-white font-semibold leading-tight">
+                    {user.name}
+                  </p>
+                  <p className="text-white/80 text-sm flex items-center gap-1">
+                    <Mail size={14} /> {user.email}
+                  </p>
+                </div>
+              </div>
+              <div className="p-4 space-y-2 text-sm">
+                <div className="flex justify-between">
+                  <span className="text-gray-500">Role:</span>
+                  <span className="font-medium uppercase">
+                    {user.role}
+                  </span>
+                </div>
+                <div className="flex justify-between">
+                  <span className="text-gray-500">Instansi:</span>
+                  <span className="font-medium">
+                    {user.instansi}
+                  </span>
+                </div>
+              </div>
               <button
-                onClick={() => setShowLogoutConfirm(false)}
-                className="flex-1 px-4 py-2 rounded border hover:bg-muted/50"
-                style={{ color: "#384E66" }}
+                onClick={handleLogout}
+                className="w-full p-3 text-red-600 hover:bg-red-50 flex items-center justify-center gap-2 border-t"
               >
-                Cancel
-              </button>
-              <button
-                onClick={confirmLogout}
-                className="flex-1 px-4 py-2 rounded text-primary-foreground"
-                style={{ backgroundColor: "#384E66" }}
-              >
-                Logout
+                <LogOut size={18} /> Logout
               </button>
             </div>
-          </div>
+          )}
         </div>
-      )}
-    </>
+      </div>
+    </header>
   );
 };
 

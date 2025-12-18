@@ -16,6 +16,7 @@ import ChangeResultsDetail from "./pages/ChangeResultsDetail";
 import ChangeSchedule from "./pages/ChangeSchedule";
 import ChangeScheduleDetail from "./pages/ChangeScheduleDetail";
 import PatchJob from "./pages/PatchJob";
+import PatchJobs from "./pages/PatchJobs";
 import PatchJobDetail from "./pages/PatchJobDetail";
 import PatchPlan from "./pages/PatchPlan";
 import PatchExecute from "./pages/PatchExecute";
@@ -114,6 +115,7 @@ const App = () => (
             <Route path="change-results" element={<ChangeResults />} />
             <Route path="change-results/:id" element={<ChangeResultsDetail />} />
             <Route path="patch-job" element={<PatchJob />} />
+            <Route path="patch-jobs" element={<PatchJobs />} />
             <Route path="patch-job/:id" element={<PatchJobDetail />} />
             <Route path="patch-job/:id/detail" element={<PatchJobDetail />} />
             <Route path="patch-plan/:id" element={<PatchPlan />} />

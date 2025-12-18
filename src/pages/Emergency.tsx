@@ -98,10 +98,10 @@ const Emergency = () => {
         <Table>
           <TableHeader>
             <TableRow>
-              <TableHead>ID</TableHead>
+              <TableHead>Emergency ID</TableHead>
               <TableHead>Title</TableHead>
               <TableHead>Description</TableHead>
-              <TableHead>Reporter</TableHead>
+              <TableHead>Reported By</TableHead>
               <TableHead>Status</TableHead>
               <TableHead>Action</TableHead>
             </TableRow>
